@@ -1,17 +1,14 @@
 # 필요한 모듈을 불러온다
 from flask import Flask, request, make_response
 from flask_restx import Api, Resource, fields
-from db import account, connection
+from db import account, card, connection, models
 import json, hashlib
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 api = Api(app, version='1.0', title='Cherry Picker API', description='체리 피커 프로젝트에서 사용할 REST API 입니다.')
-ns  = api.namespace('user', description='회원 등록, 수정, 삭제, 조회')
-<<<<<<< HEAD
-card_ns = api.namespace('card', description=)
-=======
->>>>>>> 1fbd8ea51ba782916935f5d6177260a406288b29
+ns  = api.namespace('user', description='회원 관련 REST API')
+card_ns = api.namespace('card', description="카드 관련 REST API")
 
 account_model = api.model('account', {
     'id': fields.String(required=True, description='사용자 ID'),
@@ -20,28 +17,21 @@ account_model = api.model('account', {
     'tel': fields.String(required = True, description="사용자 휴대폰 번호")
 })
 
-<<<<<<< HEAD
 login_model = api.model('login_account', {
-=======
-login_model = api.model('', {
->>>>>>> 1fbd8ea51ba782916935f5d6177260a406288b29
     'id': fields.String(required=True, description="사용자 ID"),
     'pw': fields.String(required=True, description="사용자 PW (해시)"),
 })
 
-<<<<<<< HEAD
 delete_model = api.model('password_account', {
     'pw': fields.String(required=True, description="사용자 PW")
 })
 
-# account
-=======
-delete_model = api.model('', {
-    'pw': fields.String(required=True, description="사용자 PW")
+card_model = api.model('card_model', {
+    'cardname':fields.String(required=True, description="카드 이름"),
+    'id':fields.String(required=True, description="사용자 ID"),
 })
 
-
->>>>>>> 1fbd8ea51ba782916935f5d6177260a406288b29
+# account
 @ns.route('/signup')
 class SignUPClass(Resource):
     
@@ -55,10 +45,10 @@ class SignUPClass(Resource):
         tel = request.json["tel"]
         result =  account.insert_account(con, user_id, pw, nickname, tel)
         return {
-            account.AccountResult.UNSAFE_PASSWORD: (json.dumps({"message": "안전하지 않은 패스워드 입니다."}, ensure_ascii=False), 401),
-            account.AccountResult.DUMPLICATED_ID: (json.dumps({"message": "이미 등록된 아이디 입니다."}, ensure_ascii=False), 401),
-            account.AccountResult.SQL_INJECTED: (json.dumps({"message": "SQL문에 에러가 발생하였습니다."}, ensure_ascii=False), 500),
-            account.AccountResult.SUCCESS: (json.dumps({"message": "회원가입에 성공하였습니다."}, ensure_ascii=False), 200),
+            models.AccountResult.UNSAFE_PASSWORD: (json.dumps({"message": "안전하지 않은 패스워드 입니다."}, ensure_ascii=False), 401),
+            models.AccountResult.DUMPLICATED_ID: (json.dumps({"message": "이미 등록된 아이디 입니다."}, ensure_ascii=False), 401),
+            models.AccountResult.SQL_INJECTED: (json.dumps({"message": "SQL문에 에러가 발생하였습니다."}, ensure_ascii=False), 500),
+            models.AccountResult.SUCCESS: (json.dumps({"message": "회원가입에 성공하였습니다."}, ensure_ascii=False), 200),
         }[result]
         
 @ns.route('/login')
@@ -80,7 +70,7 @@ class LoginClass(Resource):
         return res
 
 @ns.route('/update')
-class UpdateClass(Resource):
+class UpdateUserClass(Resource):
     def post(self):
         """회원의 비밀번호와 닉네임을 변경합니다."""
         con = connection.connect_db()
@@ -89,10 +79,10 @@ class UpdateClass(Resource):
         nickname = request.json["nickname"]
         result =  account.update_account(con, user_id, pw, nickname)
         return {
-            account.AccountResult.UNSAFE_PASSWORD: (json.dumps({"message": "안전하지 않은 패스워드 입니다."}, ensure_ascii=False), 401),
-            account.AccountResult.DUMPLICATED_ID:  (json.dumps({"message": "이미 등록된 아이디 입니다."}, ensure_ascii=False), 401),
-            account.AccountResult.SQL_INJECTED:    (json.dumps({"message": "SQL문에 에러가 발생하였습니다."}, ensure_ascii=False), 500),
-            account.AccountResult.SUCCESS:         (json.dumps({"message": "회원가입에 성공하였습니다."}, ensure_ascii=False), 200),
+            models.AccountResult.UNSAFE_PASSWORD: (json.dumps({"message": "안전하지 않은 패스워드 입니다."}, ensure_ascii=False), 401),
+            models.AccountResult.DUMPLICATED_ID:  (json.dumps({"message": "이미 등록된 아이디 입니다."}, ensure_ascii=False), 401),
+            models.AccountResult.SQL_INJECTED:    (json.dumps({"message": "SQL문에 에러가 발생하였습니다."}, ensure_ascii=False), 500),
+            models.AccountResult.SUCCESS:         (json.dumps({"message": "회원가입에 성공하였습니다."}, ensure_ascii=False), 200),
         }[result]
 
 @ns.route('/logout')
@@ -106,7 +96,7 @@ class LogoutClass(Resource):
         return res
 
 @ns.route('/withdraw')
-class WithdrawClass(Resource):
+class WithdrawUserClass(Resource):
     @ns.expect(delete_model)
     def delete(self):
         """회원을 제거합니다."""
@@ -122,10 +112,44 @@ class WithdrawClass(Resource):
         con.close()
         return (json.dumps({"message": "유저가 성공적으로 제거되었습니다."}, ensure_ascii=False), 200)
 
-<<<<<<< HEAD
 # usercards
 
-=======
->>>>>>> 1fbd8ea51ba782916935f5d6177260a406288b29
+@card_ns.route('/insert')
+class InsertCardClass(Resource):
+    @ns.expect(card_model)
+    def put(self):
+        """유저가 등록한 카드 정보를 데이터베이스에 입력합니다"""
+        con = connection.connect_db()
+        user_id = request.json["id"]
+        cardname = request.json["cardname"]
+
+        result = card.insert_card(con, cardname, user_id)
+        return {
+            models.CardResult.FAIL:            (json.dumps({"message": "카드가 이미 존재합니다."}, ensure_ascii=False), 401),
+            models.CardResult.SQL_INJECTED:    (json.dumps({"message": "SQL문에 에러가 발생하였습니다."}, ensure_ascii=False), 500),
+            models.CardResult.SUCCESS:         (json.dumps({"message": "카드 등록에 성공하였습니다."}, ensure_ascii=False), 200),
+        }[result]
+
+@card_ns.route('/withdraw')
+class InsertCardClass(Resource):
+    @ns.expect(card_model)
+    def delete(self):
+        """유저가 등록했던 카드 정보를 삭제"""
+        con = connection.connect_db()
+        user_id = request.json["id"]
+        cardname = request.json["cardname"]
+
+        result = card.delete_card(con, cardname, user_id)
+        return {
+            models.CardResult.FAIL:            (json.dumps({"message": "카드가 존재하지 않습니다."}, ensure_ascii=False), 401),
+            models.CardResult.SQL_INJECTED:    (json.dumps({"message": "SQL문에 에러가 발생하였습니다."}, ensure_ascii=False), 500),
+            models.CardResult.SUCCESS:         (json.dumps({"message": "카드를 성공적으로 제거하였습니다."}, ensure_ascii=False), 200),
+        }[result]
+
+
 if __name__ == "__main__":
-    app.run()
+    app.run(host='0.0.0.0')
+    
+    
+    # 그러게요
+    
