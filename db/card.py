@@ -10,7 +10,7 @@ def is_exist_card(connection: Connection, card_name: str, user_id: str) -> bool:
     
 def insert_card(connection: Connection, card_name: str, user_id: str) -> CardResult:
     cursor = connection.cursor()
-    if '"' in user_id+card_name :
+    if ('"' in user_id+card_name) or ("'" in user_id+card_name) :
         print('SQL 문법 오류가 발생하였습니다.')
         return CardResult.SQL_INJECTED
     
@@ -27,7 +27,7 @@ def insert_card(connection: Connection, card_name: str, user_id: str) -> CardRes
 
 def remove_card(connection: Connection, card_name:str, user_id:str) -> CardResult:
     cursor = connection.cursor()
-    if '"' in user_id+card_name :
+    if ('"' in user_id+card_name) or ("'" in user_id+card_name) :
         print('SQL 문법 오류가 발생하였습니다.')
         return CardResult.SQL_INJECTED
         

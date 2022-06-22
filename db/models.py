@@ -38,4 +38,3 @@ class CardResult(Enum):
     SUCCESS = 0
     FAIL = 1
     SQL_INJECTED = 2
-    DUMPLICATED_ID = 3

@@ -1,16 +1,9 @@
 import hashlib
 from db.models import *
-<<<<<<< HEAD
 from pymysql import Connection
 
 
 def load_account(connection: Connection, user_id: str) -> Account:
-=======
-from db.connection import connect_db
-
-
-def load_account(connection, user_id: str) -> Account:
->>>>>>> 1fbd8ea51ba782916935f5d6177260a406288b29
     cursor = connection.cursor()
     cursor.execute(f"SELECT * FROM accounts WHERE id='{user_id}'")
     rows = cursor.fetchall()
@@ -24,13 +17,9 @@ def load_account(connection, user_id: str) -> Account:
     return account
     
 
-<<<<<<< HEAD
 def insert_account(connection: Connection, user_id: str, user_pw: str, user_nickname: str, user_tel:str) -> AccountResult:
-=======
-def insert_account(connection, user_id: str, user_pw: str, user_nickname: str, user_tel:str) -> AccountResult:
->>>>>>> 1fbd8ea51ba782916935f5d6177260a406288b29
     cursor = connection.cursor()
-    if '"' in user_id+user_pw+user_nickname+user_tel:
+    if ('"' in user_id+user_pw+user_nickname+user_tel) or ("'" in user_id+user_pw+user_nickname+user_tel):
         print('SQL 문법 오류가 발생하였습니다.')
         return AccountResult.SQL_INJECTED
     
@@ -51,11 +40,7 @@ def insert_account(connection, user_id: str, user_pw: str, user_nickname: str, u
     return AccountResult.SUCCESS
 
 
-<<<<<<< HEAD
 def update_account(connection: Connection, user_id: str, new_pw: str, new_nickname: str, new_tel:str):
-=======
-def update_account(connection, user_id: str, new_pw: str, new_nickname: str, new_tel:str):
->>>>>>> 1fbd8ea51ba782916935f5d6177260a406288b29
     user = load_account(connection, user_id)
     
     if user == None:
@@ -71,7 +56,7 @@ def update_account(connection, user_id: str, new_pw: str, new_nickname: str, new
     if new_tel == None:
         new_tel = user.tel
     
-    if '"' in user_id+new_pw+new_nickname+new_tel:
+    if ('"' in user_id+new_pw+new_nickname+new_tel) or ("'" in user_id+new_pw+new_nickname+new_tel):
         print('SQL 문법 오류가 발생하였습니다.')
         return AccountResult.SQL_INJECTED
 
