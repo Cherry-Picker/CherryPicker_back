@@ -28,8 +28,6 @@ class Account:
         return f"id: {self.id}, pw: {self.pw}, nickname: {self.nickname}, tel:{self.tel}"
 
 
-
-
 class AccountResult(Enum):
     SUCCESS = 0
     UNSAFE_PASSWORD = 1
@@ -40,3 +38,4 @@ class CardResult(Enum):
     SUCCESS = 0
     FAIL = 1
     SQL_INJECTED = 2
+    DUMPLICATED_ID = 3

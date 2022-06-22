@@ -8,7 +8,10 @@ app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 api = Api(app, version='1.0', title='Cherry Picker API', description='체리 피커 프로젝트에서 사용할 REST API 입니다.')
 ns  = api.namespace('user', description='회원 등록, 수정, 삭제, 조회')
+<<<<<<< HEAD
 card_ns = api.namespace('card', description=)
+=======
+>>>>>>> 1fbd8ea51ba782916935f5d6177260a406288b29
 
 account_model = api.model('account', {
     'id': fields.String(required=True, description='사용자 ID'),
@@ -17,16 +20,28 @@ account_model = api.model('account', {
     'tel': fields.String(required = True, description="사용자 휴대폰 번호")
 })
 
+<<<<<<< HEAD
 login_model = api.model('login_account', {
+=======
+login_model = api.model('', {
+>>>>>>> 1fbd8ea51ba782916935f5d6177260a406288b29
     'id': fields.String(required=True, description="사용자 ID"),
     'pw': fields.String(required=True, description="사용자 PW (해시)"),
 })
 
+<<<<<<< HEAD
 delete_model = api.model('password_account', {
     'pw': fields.String(required=True, description="사용자 PW")
 })
 
 # account
+=======
+delete_model = api.model('', {
+    'pw': fields.String(required=True, description="사용자 PW")
+})
+
+
+>>>>>>> 1fbd8ea51ba782916935f5d6177260a406288b29
 @ns.route('/signup')
 class SignUPClass(Resource):
     
@@ -107,7 +122,10 @@ class WithdrawClass(Resource):
         con.close()
         return (json.dumps({"message": "유저가 성공적으로 제거되었습니다."}, ensure_ascii=False), 200)
 
+<<<<<<< HEAD
 # usercards
 
+=======
+>>>>>>> 1fbd8ea51ba782916935f5d6177260a406288b29
 if __name__ == "__main__":
     app.run()
