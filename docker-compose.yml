@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+
+  crawler:
+    build:
+      context: .
+    ports:
+      - "7000:7000"
+    restart: always
+    depends_on:
+      - mysql
+    container_name: card_crawler
+
+  mysql:
+    image: mysql:8.0.28
+    environment:
+      MYSQL_USER: 'cherry'
+      MYSQL_PASSWORD: 'cherry'
+      MYSQL_DATABASE: 'cherrypicker'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+      LC_ALL: C.UTF-8
+    volumes:
+      - /var/lib/mysql:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    container_name: mysql
