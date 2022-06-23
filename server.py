@@ -1,14 +1,15 @@
 # 필요한 모듈을 불러온다
 from flask import Flask, request, make_response
 from flask_restx import Api, Resource, fields
-from db import account, card, connection, models
+from db import account, usercard, connection, models
 import json, hashlib
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 api = Api(app, version='1.0', title='Cherry Picker API', description='체리 피커 프로젝트에서 사용할 REST API 입니다.')
 ns  = api.namespace('user', description='회원 관련 REST API')
-card_ns = api.namespace('card', description="카드 관련 REST API")
+usercard_ns = api.namespace('usercard', description="카드 관련 REST API")
+
 
 account_model = api.model('account', {
     'id': fields.String(required=True, description='사용자 ID'),
@@ -26,9 +27,15 @@ delete_model = api.model('password_account', {
     'pw': fields.String(required=True, description="사용자 PW")
 })
 
-card_model = api.model('card_model', {
+usercard_model = api.model('usercard_model', {
     'cardname':fields.String(required=True, description="카드 이름"),
     'id':fields.String(required=True, description="사용자 ID"),
+})
+
+card_model = api.model('card_model', {
+    'name': fields.List(required=True, description='top_benefit'),
+    'company': fields.List(required=True, description='search benefit'),
+    'front': fields.String(required=True, description='이미지 url'),
 })
 
 # account
@@ -114,32 +121,32 @@ class WithdrawUserClass(Resource):
 
 # usercards
 
-@card_ns.route('/insert')
+@usercard_ns.route('/insert')
 class InsertCardClass(Resource):
-    @ns.expect(card_model)
+    @usercard_ns.expect(usercard_model)
     def put(self):
         """유저가 등록한 카드 정보를 데이터베이스에 입력합니다"""
         con = connection.connect_db()
         user_id = request.json["id"]
         cardname = request.json["cardname"]
 
-        result = card.insert_card(con, cardname, user_id)
+        result = usercard.insert_card(con, cardname, user_id)
         return {
             models.CardResult.FAIL:            (json.dumps({"message": "카드가 이미 존재합니다."}, ensure_ascii=False), 401),
             models.CardResult.SQL_INJECTED:    (json.dumps({"message": "SQL문에 에러가 발생하였습니다."}, ensure_ascii=False), 500),
             models.CardResult.SUCCESS:         (json.dumps({"message": "카드 등록에 성공하였습니다."}, ensure_ascii=False), 200),
         }[result]
 
-@card_ns.route('/withdraw')
+@usercard_ns.route('/withdraw')
 class InsertCardClass(Resource):
-    @ns.expect(card_model)
+    @usercard_ns.expect(usercard_model)
     def delete(self):
         """유저가 등록했던 카드 정보를 삭제"""
         con = connection.connect_db()
         user_id = request.json["id"]
         cardname = request.json["cardname"]
 
-        result = card.delete_card(con, cardname, user_id)
+        result = usercard.delete_card(con, cardname, user_id)
         return {
             models.CardResult.FAIL:            (json.dumps({"message": "카드가 존재하지 않습니다."}, ensure_ascii=False), 401),
             models.CardResult.SQL_INJECTED:    (json.dumps({"message": "SQL문에 에러가 발생하였습니다."}, ensure_ascii=False), 500),
@@ -147,9 +154,7 @@ class InsertCardClass(Resource):
         }[result]
 
 
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
-    
-    
-    # 그러게요
-    
