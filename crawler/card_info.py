@@ -14,7 +14,6 @@ def insert_card_info(con: Connection):
             print('api 접근이 잘못되었습니다.')
             return []
         datas = json.loads(response.text)["data"]
-        print(datas[0]["name"])
         for data in datas:
             cards.append({
                 "name": data["name"],

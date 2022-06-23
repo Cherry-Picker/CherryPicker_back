@@ -242,7 +242,9 @@ class GetCardEventsClass(Resource):
         rows = cursor.fetchall()
 
         con.close()
-
+        if len(rows) != 0:
+            print("이벤트가 존재하지 않습니다.")
+            return json.dumps({"message": "이벤트가 존재하지 않습니다."}, 401)
         return (json.dumps(rows, default=str,ensure_ascii=False), 200)
 
 if __name__ == "__main__":
