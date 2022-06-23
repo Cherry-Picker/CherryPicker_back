@@ -46,15 +46,17 @@ def insert_card_events(con: Connection,idx: int):
 
         except:
             pass
-
-    name = json_data["name"]
-    findate = max(dates)
-    if findate < datetime.now():
-        print("이벤트를 더이상 제공하지 않습니다.")
-        return
-    description = content.replace('"','').replace("'","")
-    
-    cursor = con.cursor()
-    cursor.execute(f"INSERT INTO events VALUES ('{name}', '{findate}', '{description}');")
-    print('데이터 입력 성공')
-    con.commit()
+    try:
+        name = json_data["name"]
+        findate = max(dates)
+        if findate < datetime.now():
+            print("이벤트를 더이상 제공하지 않습니다.")
+            return
+        description = content.replace('"','').replace("'","")
+        
+        cursor = con.cursor()
+        cursor.execute(f"INSERT INTO events VALUES ('{name}', '{findate}', '{description}');")
+        print('데이터 입력 성공')
+        con.commit()
+    except:
+        pass
