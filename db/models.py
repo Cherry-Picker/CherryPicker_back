@@ -32,9 +32,22 @@ class AccountResult(Enum):
     SUCCESS = 0
     UNSAFE_PASSWORD = 1
     SQL_INJECTED = 2
-    DUMPLICATED_ID = 3
+    NO_USER = 3
+    DUMPLICATED_ID = 4
+    FAIL = 5
 
 class CardResult(Enum):
+    SUCCESS = 0
+    FAIL = 1
+    SQL_INJECTED = 2
+
+class UserCardResult(Enum):
+    SUCCESS = 0
+    FAIL = 1
+    SQL_INJECTED = 2
+    NO_USER = 3
+    
+class BenefitResult(Enum):
     SUCCESS = 0
     FAIL = 1
     SQL_INJECTED = 2

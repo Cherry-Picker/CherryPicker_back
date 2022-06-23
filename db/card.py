@@ -3,18 +3,21 @@ from pymysql import Connection
 import pandas as pd
 from soynlp.hangle import jamo_levenshtein
 
-def load_card(connection: Connection, name: str):
+def load_card(connection: Connection, name: str) -> tuple:
     
     cursor = connection.cursor()
+    if ('"' in name or "'" in name):
+        print('SQL 문법 오류가 발생하였습니다.')
+        return (CardResult.SQL_INJECTED, None)
     cursor.execute(f"SELECT * FROM cards WHERE name='{name}'")
     rows = cursor.fetchall()
 
     connection.commit()
     if len(rows) == 0:
         print('카드정보가 존재하지 않습니다.')
-        return None
+        return (CardResult.FAIL, None)
 
-    return rows[0]
+    return (CardResult.SUCESS, rows[0])
 
 def search_card(connection: Connection, name: str):
     cursor = connection.cursor()
