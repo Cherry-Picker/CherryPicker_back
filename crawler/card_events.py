@@ -22,7 +22,7 @@ def insert_card_events(con: Connection,idx: int):
     if pr_detail == None:
         print("이벤트를 제공하지 않습니다.")
         return
-    soup  = BeautifulSoup(pr_detail, 'lxml')
+    soup  = BeautifulSoup(pr_detail)
     script_tag = soup.find_all(['script', 'style', 'header', 'footer', 'form'])
 
     for script in script_tag:
