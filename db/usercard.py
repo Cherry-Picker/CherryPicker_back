@@ -35,7 +35,7 @@ def remove_usercard(connection: Connection, card_name:str, user_id:str) -> CardR
         print('카드가 존재하지 않습니다.')
         return CardResult.FAIL
     
-    cursor.execute(f"DELETE * FROM usercards WHERE id='{user_id}' AND name='{card_name}'")
+    cursor.execute(f"DELETE FROM usercards WHERE id='{user_id}' AND name='{card_name}'")
     print('카드가 성공적으로 제거되었습니다.')
     connection.commit()
     connection.close()

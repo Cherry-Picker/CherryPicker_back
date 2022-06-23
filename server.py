@@ -1,15 +1,15 @@
 # 필요한 모듈을 불러온다
-from flask import Flask, request, make_response
-from flask_restx import Api, Resource, fields
-from db import account, usercard, connection, models
+from flask import Flask, request, make_response, Response
+from flask_restx import Api, Resource, fields, reqparse
+from db import account, usercard, connection, models, card
 import json, hashlib
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 api = Api(app, version='1.0', title='Cherry Picker API', description='체리 피커 프로젝트에서 사용할 REST API 입니다.')
 ns  = api.namespace('user', description='회원 관련 REST API')
-usercard_ns = api.namespace('usercard', description="카드 관련 REST API")
-
+usercard_ns = api.namespace('usercard', description="유저 카드 정보 REST API")
+card_ns = api.namespace('card', description='카드 정보 API')
 
 account_model = api.model('account', {
     'id': fields.String(required=True, description='사용자 ID'),
@@ -18,24 +18,23 @@ account_model = api.model('account', {
     'tel': fields.String(required = True, description="사용자 휴대폰 번호")
 })
 
-login_model = api.model('login_account', {
+login_model = api.model('account_login_info', {
     'id': fields.String(required=True, description="사용자 ID"),
     'pw': fields.String(required=True, description="사용자 PW (해시)"),
 })
 
-delete_model = api.model('password_account', {
+delete_model = api.model('account_password', {
     'pw': fields.String(required=True, description="사용자 PW")
 })
 
-usercard_model = api.model('usercard_model', {
+usercard_model = api.model('usercard', {
     'cardname':fields.String(required=True, description="카드 이름"),
     'id':fields.String(required=True, description="사용자 ID"),
 })
 
-card_model = api.model('card_model', {
-    'name': fields.List(required=True, description='top_benefit'),
-    'company': fields.List(required=True, description='search benefit'),
-    'front': fields.String(required=True, description='이미지 url'),
+card_model = api.model('card', {
+    'name': fields.String(required=True, description="카드 이름"),
+    
 })
 
 # account
@@ -43,7 +42,8 @@ card_model = api.model('card_model', {
 class SignUPClass(Resource):
     
     @ns.expect(account_model)
-    def post(self):
+    @staticmethod
+    def post():
         """회원가입시 유저정보를 데이터베이스에 저장합니다."""
         con = connection.connect_db()
         user_id = request.json["id"]
@@ -61,7 +61,8 @@ class SignUPClass(Resource):
 @ns.route('/login')
 class LoginClass(Resource):
     @ns.expect(login_model)
-    def post(self):
+    @staticmethod
+    def post():
         """로그인 시 브라우저에 쿠키를 제공합니다."""
         con = connection.connect_db()
         user_id = request.json["id"]
@@ -78,7 +79,8 @@ class LoginClass(Resource):
 
 @ns.route('/update')
 class UpdateUserClass(Resource):
-    def post(self):
+    @staticmethod
+    def post():
         """회원의 비밀번호와 닉네임을 변경합니다."""
         con = connection.connect_db()
         user_id = request.json["id"]
@@ -94,7 +96,8 @@ class UpdateUserClass(Resource):
 
 @ns.route('/logout')
 class LogoutClass(Resource):
-    def post(self):
+    @staticmethod
+    def post():
         """로그아웃 시 쿠키를 제거합니다"""
         res = make_response()
         res.set_cookie("userid", "", expires = 0)
@@ -105,7 +108,8 @@ class LogoutClass(Resource):
 @ns.route('/withdraw')
 class WithdrawUserClass(Resource):
     @ns.expect(delete_model)
-    def delete(self):
+    @staticmethod
+    def delete():
         """회원을 제거합니다."""
         token = request.cookies.get("token")
         userid = request.cookies.get("userid")
@@ -122,9 +126,10 @@ class WithdrawUserClass(Resource):
 # usercards
 
 @usercard_ns.route('/insert')
-class InsertCardClass(Resource):
+class InsertUserCardClass(Resource):
     @usercard_ns.expect(usercard_model)
-    def put(self):
+    @staticmethod
+    def put():
         """유저가 등록한 카드 정보를 데이터베이스에 입력합니다"""
         con = connection.connect_db()
         user_id = request.json["id"]
@@ -137,10 +142,12 @@ class InsertCardClass(Resource):
             models.CardResult.SUCCESS:         (json.dumps({"message": "카드 등록에 성공하였습니다."}, ensure_ascii=False), 200),
         }[result]
 
-@usercard_ns.route('/withdraw')
-class InsertCardClass(Resource):
+@usercard_ns.route('/delete')
+class DeleteUserCardClass(Resource):
+
     @usercard_ns.expect(usercard_model)
-    def delete(self):
+    @staticmethod
+    def delete():
         """유저가 등록했던 카드 정보를 삭제"""
         con = connection.connect_db()
         user_id = request.json["id"]
@@ -153,8 +160,45 @@ class InsertCardClass(Resource):
             models.CardResult.SUCCESS:         (json.dumps({"message": "카드를 성공적으로 제거하였습니다."}, ensure_ascii=False), 200),
         }[result]
 
+getCardModel = reqparse.RequestParser()
+getCardModel.add_argument("name", type = str, default=None, help="카드 이름")
+@card_ns.route('/load')
+class LoadCardClass(Resource):
+    @staticmethod
+    @ns.expect(getCardModel)
+    def get():
+        """특정 카드의 카드정보 조회"""
+        con = connection.connect_db()
+        print("detected")
+        name = request.args.get("name")
+        c = card.load_card(con, name)
 
+        if c == None:
+            return (json.dumps({"message": "카드가 존재하지 않습니다."}, ensure_ascii=False), 400)
 
+        print(c)
+
+        return (json.dumps(c, ensure_ascii = False), 200)
+    
+
+@card_ns.route('/search')
+class SearchCardClass(Resource):
+    @staticmethod
+    @ns.expect(getCardModel)
+    def get():
+        """찾고자 하는 카드의 이름과 유사한 이름을 가진 카드 목록들을 조회"""
+        con = connection.connect_db()
+        name = request.args.get("name")
+        cards = card.search_card(con, name)
+
+        # convert index values to string (when they're something else - JSON requires strings for keys)
+        cards.index = cards.index.map(str)
+        # convert column names to string (when they're something else - JSON requires strings for keys)
+        cards.columns = cards.columns.map(str)
+        
+        card_json = str(cards.to_dict(orient="records")).replace("'", '"')
+
+        return json.loads(card_json)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')

@@ -1,44 +1,35 @@
 from db.models import *
 from pymysql import Connection
+import pandas as pd
+from soynlp.hangle import jamo_levenshtein
 
-def is_exist_card(connection: Connection, card_name: str, user_id: str) -> bool:
+def load_card(connection: Connection, name: str):
+    
     cursor = connection.cursor()
-    cursor.execute(f"SELECT * FROM usercards WHERE id='{user_id}' AND name='{card_name}'")
+    cursor.execute(f"SELECT * FROM cards WHERE name='{name}'")
     rows = cursor.fetchall()
-    return len(rows) != 0
-    
-    
-def insert_card(connection: Connection, card_name: str, user_id: str) -> CardResult:
-    cursor = connection.cursor()
-    if ('"' in user_id+card_name) or ("'" in user_id+card_name) :
-        print('SQL 문법 오류가 발생하였습니다.')
-        return CardResult.SQL_INJECTED
-    
-    if is_exist_card(connection, card_name, user_id):
-        print('해당 유저의 카드는 이미 등록되어 있습니다.')
-        return CardResult.FAIL
-    
-    cursor.execute(f"INSERT INTO usercards(id, name) VALUES ('{user_id}', '{card_name}')")
-    print('usercards에 정보가 추가되었습니다.')
+
     connection.commit()
-    connection.close()
+    if len(rows) == 0:
+        print('카드정보가 존재하지 않습니다.')
+        return None
 
-    return CardResult.SUCCESS
+    return rows[0]
 
-def remove_card(connection: Connection, card_name:str, user_id:str) -> CardResult:
+def search_card(connection: Connection, name: str):
     cursor = connection.cursor()
-    if ('"' in user_id+card_name) or ("'" in user_id+card_name) :
-        print('SQL 문법 오류가 발생하였습니다.')
-        return CardResult.SQL_INJECTED
-        
-    if not is_exist_card(connection, card_name, user_id):
-        print('카드가 존재하지 않습니다.')
-        return CardResult.FAIL
-    
-    cursor.execute(f"DELETE * FROM usercards WHERE id='{user_id}' AND name='{card_name}'")
-    print('카드가 성공적으로 제거되었습니다.')
-    connection.commit()
-    connection.close()
-    return CardResult.SUCCESS
+    cursor.execute("SELECT * FROM cards")
+    rows = cursor.fetchall()
+    df = pd.DataFrame(rows, columns = ["name", "company", "front"])
+    df["distance"] = [jamo_levenshtein(dfname, name) for dfname in df.name]
+    df = df.sort_values("distance", axis = 0)
 
-   
+    connection.commit()
+    return df.head()
+    
+def insert_card(connection: Connection, name: str, company: str, front: str):
+    
+    cursor = connection.cursor()
+    cursor.execute(f"INSERT INTO cards VALUE ('{name}', '{company}', '{front}');")
+
+    connection.commit()
