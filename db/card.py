@@ -36,3 +36,12 @@ def insert_card(connection: Connection, name: str, company: str, front: str):
     cursor.execute(f"INSERT INTO cards VALUE ('{name}', '{company}', '{front}');")
 
     connection.commit()
+
+def load_company_card(connection: Connection, company: str):
+
+    cursor = connection.cursor()
+    cursor.execute(f"SELECT name, front FROM cards WHERE company='{company}'")
+    result = cursor.fetchall()
+
+    connection.close()
+    return result

@@ -27,7 +27,6 @@ delete_model = api.model('account_password', {
     'pw': fields.String(required=True, description="사용자 PW")
 })
 
-
 usercard_model = api.model('usercard', {
     'cardname':fields.String(required=True, description="카드 이름"),
     'id':fields.String(required=True, description="사용자 ID"),
@@ -208,8 +207,23 @@ class SearchCardClass(Resource):
         cards.index = cards.index.map(str)
         cards.columns = cards.columns.map(str)
         card_json = str(cards.to_dict(orient="records")).replace("'", '"')
-        return json.loads(card_json)
-
-
+        return card_json
+    
+getCompanyCardModel = reqparse.RequestParser()
+getCompanyCardModel.add_argument("company", type = str, default=None, help="회사 이름")
+@card_ns.route('/get_cards')
+class GetCardsClass(Resource):
+    @card_ns.expect(getCompanyCardModel)
+    def get(self):
+        """해당하는 회사에서 제공하는 카드 목록들을 조회"""
+        con = connection.connect_db()
+        company = request.args.get("company")
+        cards = card.load_company_card(con, company)
+        if len(cards) == 0:
+            print("회사 이름이 없습니다.")
+            return json.dumps({"message": "회사 이름이 없습니다."}, ensure_ascii = False) , 401
+        
+        return json.dumps(cards, ensure_ascii = False), 200
+        
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
