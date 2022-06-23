@@ -26,9 +26,8 @@ CREATE TABLE `usercards` (
 
 CREATE TABLE `events` (
 	`name`	varchar(20)	NOT NULL,
-	`eventname`	text	NULL,
 	`findate`	datetime	NULL,
-	`describe`	text	NULL
+	`describe`	longtext	NULL
 );
 
 ALTER TABLE `cards` ADD CONSTRAINT `PK_CARDS` PRIMARY KEY (
