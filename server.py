@@ -10,6 +10,7 @@ api = Api(app, version='1.0', title='Cherry Picker API', description='체리 피
 ns  = api.namespace('user', description='회원 관련 REST API')
 usercard_ns = api.namespace('usercard', description="유저 카드 정보 REST API")
 card_ns = api.namespace('card', description='카드 정보 API')
+event_ns = api.namespace('event', description='카드 이벤트')
 
 account_model = api.model('account', {
     'id': fields.String(required=True, description='사용자 ID'),
@@ -35,6 +36,7 @@ usercard_model = api.model('usercard', {
 card_model = api.model('card', {
     'name': fields.String(required=True, description="카드 이름"),
 })
+
 
 # account
 @ns.route('/signup')
@@ -224,6 +226,24 @@ class GetCardsClass(Resource):
             return json.dumps({"message": "회사 이름이 없습니다."}, ensure_ascii = False) , 401
         
         return json.dumps(cards, ensure_ascii = False), 200
-        
+
+getCompanyCardModel = reqparse.RequestParser()
+getCompanyCardModel.add_argument("name", type = str, default=None, help="카드 이름")
+@event_ns.route('/get_events')
+class GetCardEventsClass(Resource):
+    @event_ns.expect(getCompanyCardModel)
+    def post(self):
+        """카드 이벤트들을 조회"""
+        con = connection.connect_db()
+        name = request.args.get("name")
+        cursor = con.cursor()
+
+        cursor.execute(f"SELECT * FROM events WHERE name='{name}'")
+        rows = cursor.fetchall()
+
+        con.close()
+
+        return (json.dumps(rows, default=str,ensure_ascii=False), 200)
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
